@@ -2,7 +2,10 @@ var express = require('express'),
     fs = require('fs'),
     jade = require('jade'),
     mysql = require('mysql'),
-    app = express.createServer();
+    logger = require('morgan'),
+    methodOverride = require('method-override'),
+    bodyParser = require('body-parser'),
+    app = express();
 
 var config = JSON.parse(fs.readFileSync(__dirname + '/../config/hosts.json', 'utf-8'));
 
@@ -19,7 +22,7 @@ function formatDate(d){
     + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 };
 
-var dbclient = mysql.createClient({
+var dbclient = mysql.createConnection({
   host: config.servers.database[0],
   port: 3306,
   user: 'isuconapp',
@@ -27,18 +30,17 @@ var dbclient = mysql.createClient({
   database: 'isucon'
 });
 
-app.configure(function(){
-  app.use(express.logger('default'));
-  app.use(express.methodOverride());
-  app.use(express.bodyParser());
+  app.use(logger('dev'));
+  app.use(methodOverride());
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true}));
 
   app.set('view engine', 'jade');
 
   app.use(express.static(__dirname + '/public'));
-  app.use(express.errorHandler());
+  //app.use(express.errorHandler());
 
-  app.use(app.router);
-});
+  //app.use(app.router);
 
 function IsuException(message) {
    this.message = message;

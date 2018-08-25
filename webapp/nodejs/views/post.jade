@@ -1,9 +1,12 @@
-form(method="POST", action="/post")
-  table
-    tr
-      td
-        input(type="text", name="title", size=60)
-    tr
-      td
-        textarea(name="body", cols=60, rows=8)
-  input(type="submit")
+extends layout
+
+block articleview
+  form(method="POST", action="/post")
+    table
+      tr
+        td
+          input(type="text", name="title", size=60)
+      tr
+        td
+          textarea(name="body", cols=60, rows=8)
+    input(type="submit")

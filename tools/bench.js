@@ -36,6 +36,7 @@ function isValidHtml(content){
 };
 
 function prepare(callback){
+
   engine.getArticle('/', targetHost, targetPort, function(err, content){
     if (err){ output(null, null, {summary:'error', reason:['failed to GET /']}, null, function(err){process.exit(1); return;}); }
     if (! isValidHtml(content)){
@@ -67,6 +68,7 @@ function prepare(callback){
 };
 
 var loading = true;
+
 process.on('SIGUSR1', function(){
   loading = false;
 });
@@ -228,6 +230,7 @@ function checker(articleid, data, callback){
       callback(checkresult); return;
     }
     checkArticle(function(checkresult){
+      console.log(checkresult);
       if (checkresult.summary !== 'success') {
         callback(checkresult); return;
       }
@@ -245,9 +248,12 @@ var initialDataSet = require('initialData').Set;
 function checkArticle(articleid, data, callback){
   if (articleid !== null && data == null && callback == null) {
     callback = articleid;
-
+    
+    console.log(initialDataSet.length);
     if (initialDataSet.length < 1) {
+      console.log('koko');
       callback({summary:'success', articleid:0});
+      return;
     }
     var article = initialDataSet[Math.floor(Math.random() * initialDataSet.length)];
     articleid = article.id;
@@ -270,6 +276,9 @@ function checkArticle(articleid, data, callback){
       if (! checkresult.title)
         failed_reasons.push('title mismatch, original:' + data.title);
       checkresult.created = (/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d( \+0900)?$/.exec($('#articleview .article .created').text()) ? true : false);
+        if ($('#articleview .article .body').html() == null) {
+		return;
+	}
       var gotbodylines = $('#articleview .article .body').html().split('\n').map(function(s){return s.trim();}).join('').split(/ *<br ?\/?>\n? */i);
       if (gotbodylines[gotbodylines.length - 1].length < 1)
         gotbodylines.pop();

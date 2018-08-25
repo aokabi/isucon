@@ -5,7 +5,11 @@ var express = require('express'),
     fs = require('fs'),
     http = require('http'),
     child = require('child_process'),
-    app = express.createServer();
+    logger = require('morgan'),
+    methodOverride = require('method-override'),
+    bodyParser = require('body-parser'),
+   // errorHandler = require('error-handler'),
+    app = express();
 
 var conf = JSON.parse(fs.readFileSync(__dirname + '/config.json'));
 
@@ -15,14 +19,13 @@ function error_handle(req, res, err){
   res.send(err, 500);
 };
 
-app.configure(function(){
-  app.use(express.logger('default'));
-  app.use(express.methodOverride());
-  app.use(express.bodyParser());
+  app.use(logger('dev'));
+  app.use(methodOverride());
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
 
-  app.use(express.errorHandler());
-  app.use(app.router);
-});
+  //app.use(errorHandler());
+  //app.use(app.router);
 
 var executings = {};
 
@@ -39,7 +42,7 @@ app.get('/bench/check/:teamid', function(req, res){
     });
   }
   else
-    res.send(404);
+    res.sendStatus(404);
 });
 
 app.post('/bench/start/:teamid', function(req, res){
@@ -47,6 +50,8 @@ app.post('/bench/start/:teamid', function(req, res){
   var infmode = req.body.infmode;
   var key = req.body.key;
   var pass = req.body.pass;
+  console.log(key);
+  console.log(pass);
   if (conf.master.pass === key && conf.teams[teamid].pass === pass) {
     if (! executings[teamid]){
       var benchCmd = __dirname + '/etc/bench.sh ' + teamid + (infmode ? ' inf' : '');
@@ -60,8 +65,8 @@ app.post('/bench/start/:teamid', function(req, res){
             path: '/result/' + teamid
           }, function(res){
             // nothing to do.
+            req.end(JSON.stringify({resulttime:(new Date()), test:false, score:0, bench:{bench_output:stdout}, checker:{bench_err:stderr}}));
           });
-          req.end(JSON.stringify({resulttime:(new Date()), test:false, score:0, bench:{bench_output:stdout}, checker:{bench_err:stderr}}));
         }
       });
       res.send('ok');

@@ -1,4 +1,4 @@
-!!! html
+doctype html
 html
   head
     meta(http-equiv="Content-Type", content="text/html", charset="utf-8")
@@ -23,4 +23,4 @@ html
                 td
                   a(href="/article/#{item.id}") #{item.title}
         #articleview
-          !{body}
+          block articleview

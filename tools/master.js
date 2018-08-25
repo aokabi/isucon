@@ -4,7 +4,11 @@ var express = require('express'),
     async = require('async'),
     fs = require('fs'),
     http = require('http'),
-    app = express.createServer();
+    app = express(),
+    methodOverride = require('method-override'),
+    bodyParser = require('body-parser'),
+    errorHandler = require('error-handler'),
+    logger = require('morgan');
 
 var conf = JSON.parse(fs.readFileSync(__dirname + '/config.json'));
 
@@ -20,7 +24,7 @@ function formatDate(d){
     + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
 };
 
-var dbclient = mysql.createClient({
+var dbclient = mysql.createConnection({
   host: 'localhost',
   port: 3306,
   user: 'isumaster',
@@ -28,19 +32,18 @@ var dbclient = mysql.createClient({
   database: 'isumaster'
 });
 
-app.configure(function(){
-  app.use(express.logger('default'));
-  app.use(express.methodOverride());
-  app.use(express.bodyParser());
+  app.use(logger('dev'));
+  app.use(methodOverride());
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   app.set('view engine', 'jade');
   app.set('view options', {layout: false});
 
   app.use(express.static(__dirname + '/public'));
-  app.use(express.errorHandler());
+  //app.use(errorHandler());
 
-  app.use(app.router);
-});
+  //app.use(app.router);
 
 app.get('/', function(req, res){
   res.render('index', {teams:conf.teamlist.map(function(n){return conf.teams[n];})});
@@ -106,9 +109,11 @@ app.get('/history', function(req, res){
 
 app.post('/result/:teamid', function(req, res){
   var teamid = req.params.teamid;
+  console.log(req.body.resulttime);
   var resulttime = formatDate(new Date(req.body.resulttime));
   var INSERT_RESULT = 'INSERT INTO results SET teamid=?,resulttime=?,test=?,score=?,bench=?,checker=?';
   var data = [teamid,resulttime,(req.body.test ? 1 : 0),req.body.score,JSON.stringify(req.body.bench),JSON.stringify(req.body.checker)];
+  console.log(data);
   dbclient.query(INSERT_RESULT, data, function(err, results){
     res.send({status:'ok'});
   });
@@ -164,7 +169,7 @@ app.post('/bench/start/:teamid', function(req, res){
       if (agentRes.statusCode === 400)
         res.send({status:'already running'}, 400);
       else if (agentRes.statusCode === 403)
-        res.send({status:'password mismatch'}, 403);
+        res.status(403).send({status:'password mismatch'});
       else
         res.send({status:'system error'}, 500);
     }
@@ -208,4 +213,8 @@ app.post('/bench/stop/:teamid', function(req, res){
   agentReq.end();
 });
 
-app.listen(3080);
+var server = app.listen(3080, '0.0.0.0', () => {
+	var host = server.address().address;
+	var port = server.address().port;
+	console.log('listening at http://%s:%s', host, port);
+});

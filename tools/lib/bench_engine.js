@@ -1,16 +1,25 @@
-var jsdom = require('jsdom');
+jsdom = require('jsdom');
+const { JSDOM } = jsdom;
+const { window } = new JSDOM();
+const { document } = (new JSDOM('')).window;
+global.document = document;
 
 var parseHtml = exports.parseHtml = function(content, callback){
-  jsdom.env({
-    html: content,
-    scripts: [
-      'http://code.jquery.com/jquery.js'
-    ]
-  }, function (err, window) {
-    var $ = window.jQuery;
-    callback(window.$);
-  });
+    const { window } = new JSDOM(content);
+    var jQuery = require('jquery');
+    var $ = jQuery(window);
+    callback($);
 };
+//jsdom.env({
+//    html: content,
+//    scripts: [
+//      'http://code.jquery.com/jquery.js'
+//    ]
+//  }, function (err, window) {
+//    var $ = window.jQuery;
+//    callback(window.$);
+//  });
+//};
 
 
 var http = require('http');
