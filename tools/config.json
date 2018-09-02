@@ -10,6 +10,6 @@
     "team01" 
   ],
   "teams": {
-    "team01": {"id":"team01", "name":"oreore", "pass":"pass", "bench":"bench01", "target":"127.0.0.1:5000"}
+    "team01": {"id":"team01", "name":"oreore", "pass":"pass", "bench":"bench01", "target":"127.0.0.1:80"}
   }
 }  
