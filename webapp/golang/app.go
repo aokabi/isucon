@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"text/template"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/Joker/jade"
 	"github.com/jmoiron/sqlx"
@@ -16,6 +17,7 @@ import (
 const (
 	RECENT_COMMENTED_ARTICLES = "SELECT a.id, a.title FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10"
 	RECENT_ARTICLES = "SELECT id,title,body,created_at FROM article ORDER BY id DESC LIMIT 10"
+	ARTICLE_POST_QUERY = "INSERT INTO article SET title=?, body=?"
 	VIEWS_DIR = "/root/isucon/webapp/golang/views"
 )
 
@@ -85,7 +87,21 @@ func GetPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PostPost(w http.ResponseWriter, r *http.Request) {}
+/*
+app.post('/post', function(req, res){
+  var article_post_query = 'INSERT INTO article SET title=?, body=?';
+  var title = req.body.title;
+  var body = req.body.body;
+  dbclient.query(article_post_query, [title,body], function(err, results){
+    if (err) {error_handle(req, res, err); return;}
+    res.redirect('/');
+  });
+});
+*/
+
+func PostPost(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func GetArticle(w http.ResponseWriter, r *http.Request) {}
 
