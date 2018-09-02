@@ -6,7 +6,7 @@ import (
 	"time"
 	"path/filepath"
 	"fmt"
-	"text/template"
+	"html/template"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
