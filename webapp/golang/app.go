@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"fmt"
 	"html/template"
+	"strconv"
+	"io"
+	"encoding/json"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -84,20 +87,34 @@ func GetPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-app.post('/post', function(req, res){
-  var article_post_query = 'INSERT INTO article SET title=?, body=?';
-  var title = req.body.title;
-  var body = req.body.body;
-  dbclient.query(article_post_query, [title,body], function(err, results){
-    if (err) {error_handle(req, res, err); return;}
-    res.redirect('/');
-  });
-});
-*/
-
 func PostPost(w http.ResponseWriter, r *http.Request) {
-	db.Exec("INSERT INTO article SET title=?, body=?", )
+  //To allocate slice for request body
+  length, err := strconv.Atoi(r.Header.Get("Content-Length"))
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  //Read body data to parse json
+  body := make([]byte, length)
+  length, err = r.Body.Read(body)
+  if err != nil && err != io.EOF {
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  //parse json
+  var jsonBody map[string]interface{}
+  err = json.Unmarshal(body[:length], &jsonBody)
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+	_, err = db.Exec("INSERT INTO article SET title=?, body=?", jsonBody["title"], jsonBody["body"])
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
 }
 
 func GetArticle(w http.ResponseWriter, r *http.Request) {}
