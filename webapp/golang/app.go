@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"text/template"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/Joker/jade"
 	"github.com/jmoiron/sqlx"
@@ -16,12 +17,14 @@ import (
 const (
 	RECENT_COMMENTED_ARTICLES = "SELECT a.id, a.title FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10"
 	RECENT_ARTICLES = "SELECT id,title,body,created_at FROM article ORDER BY id DESC LIMIT 10"
+	ARTICLE_POST_QUERY = "INSERT INTO article SET title=?, body=?"
 	VIEWS_DIR = "/root/isucon/webapp/golang/views"
 )
 
 var (
 	db *sqlx.DB
 	tpl_index *template.Template
+	tpl_post *template.Template
 )
 
 type Article struct{
@@ -67,9 +70,38 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetPost(w http.ResponseWriter, r *http.Request) {}
+func GetPost(w http.ResponseWriter, r *http.Request) {
+	sidebarItems, err := loadSidebarData()
+	if err != nil {
+		log.Println("Failed to get recently commented articles", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	err = tpl_post.Execute(w, map[string]interface{}{
+		"sidebaritems": sidebarItems,
+	})
+	if err != nil {
+		log.Println("Failed to execute template for post", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+}
 
-func PostPost(w http.ResponseWriter, r *http.Request) {}
+/*
+app.post('/post', function(req, res){
+  var article_post_query = 'INSERT INTO article SET title=?, body=?';
+  var title = req.body.title;
+  var body = req.body.body;
+  dbclient.query(article_post_query, [title,body], function(err, results){
+    if (err) {error_handle(req, res, err); return;}
+    res.redirect('/');
+  });
+});
+*/
+
+func PostPost(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func GetArticle(w http.ResponseWriter, r *http.Request) {}
 
@@ -102,14 +134,21 @@ func init() {
 	db.SetConnMaxLifetime(5 * time.Minute)
 	log.Printf("Succeeded to connect db.")
 
+	funcMap := template.FuncMap{
+		"formatDate": FormatDate,
+	}
+
 	tpl_index_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
 	if err != nil {
 		log.Fatal("Failed to parse index.jade", err)
 	}
-	funcMap := template.FuncMap{
-		"formatDate": FormatDate,
-	}
 	tpl_index = template.Must(template.New("index").Funcs(funcMap).Parse(tpl_index_str))
+
+	tpl_post_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
+	if err != nil {
+		log.Fatal("Failed to parse post.jade", err)
+	}
+	tpl_post = template.Must(template.New("post").Funcs(funcMap).Parse(tpl_post_str))
 }
 
 func main() {
