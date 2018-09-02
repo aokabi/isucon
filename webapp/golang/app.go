@@ -6,7 +6,7 @@ import (
 	"time"
 	"path/filepath"
 	"fmt"
-	"text/template"
+	"html/template"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -15,9 +15,6 @@ import (
 )
 
 const (
-	RECENT_COMMENTED_ARTICLES = "SELECT a.id, a.title FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10"
-	RECENT_ARTICLES = "SELECT id,title,body,created_at FROM article ORDER BY id DESC LIMIT 10"
-	ARTICLE_POST_QUERY = "INSERT INTO article SET title=?, body=?"
 	VIEWS_DIR = "/root/isucon/webapp/golang/views"
 )
 
@@ -36,13 +33,13 @@ type Article struct{
 
 func loadSidebarData() ([]Article, error) {
 	articles := []Article{}
-	err := db.Select(articles, RECENT_COMMENTED_ARTICLES)
+	err := db.Select(articles, "SELECT a FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10")
 	return articles, err
 }
 
 func loadMainData() ([]Article, error) {
 	articles := []Article{}
-	err := db.Select(articles, RECENT_ARTICLES)
+	err := db.Select(articles, "SELECT a FROM article a ORDER BY id DESC LIMIT 10")
 	return articles, err
 }
 
@@ -100,7 +97,7 @@ app.post('/post', function(req, res){
 */
 
 func PostPost(w http.ResponseWriter, r *http.Request) {
-
+	db.Exec("INSERT INTO article SET title=?, body=?", )
 }
 
 func GetArticle(w http.ResponseWriter, r *http.Request) {}
@@ -140,13 +137,13 @@ func init() {
 
 	tpl_index_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
 	if err != nil {
-		log.Fatal("Failed to parse index.jade", err)
+		log.Fatalln("Failed to parse index.jade", err)
 	}
 	tpl_index = template.Must(template.New("index").Funcs(funcMap).Parse(tpl_index_str))
 
-	tpl_post_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
+	tpl_post_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "post.jade"))
 	if err != nil {
-		log.Fatal("Failed to parse post.jade", err)
+		log.Fatalln("Failed to parse post.jade", err)
 	}
 	tpl_post = template.Must(template.New("post").Funcs(funcMap).Parse(tpl_post_str))
 }
@@ -158,5 +155,5 @@ func main() {
 	r.Methods("POST").Path("/post").HandlerFunc(PostPost)
 	r.Methods("GET").Path("/article/{articleid}").HandlerFunc(GetArticle)
 	r.Methods("POST").Path("/comment/{articleid}").HandlerFunc(PostComment)
-	log.Fatal(http.ListenAndServe(":5000", r))
+	log.Fatalln(http.ListenAndServe(":5000", r))
 }
