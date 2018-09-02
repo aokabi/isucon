@@ -33,13 +33,13 @@ type Article struct{
 
 func loadSidebarData() ([]Article, error) {
 	articles := []Article{}
-	err := db.Select(articles, "SELECT a FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10")
+	err := db.Select(&articles, "SELECT a.* FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10")
 	return articles, err
 }
 
 func loadMainData() ([]Article, error) {
 	articles := []Article{}
-	err := db.Select(articles, "SELECT a FROM article a ORDER BY id DESC LIMIT 10")
+	err := db.Select(&articles, "SELECT a.* FROM article a ORDER BY id DESC LIMIT 10")
 	return articles, err
 }
 
@@ -139,6 +139,7 @@ func init() {
 	if err != nil {
 		log.Fatalln("Failed to parse index.jade", err)
 	}
+	log.Println(tpl_index_str)
 	tpl_index = template.Must(template.New("index").Funcs(funcMap).Parse(tpl_index_str))
 
 	tpl_post_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "post.jade"))
