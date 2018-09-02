@@ -22,6 +22,7 @@ const (
 var (
 	db *sqlx.DB
 	tpl_index *template.Template
+	tpl_post *template.Template
 )
 
 type Article struct{
@@ -67,7 +68,22 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetPost(w http.ResponseWriter, r *http.Request) {}
+func GetPost(w http.ResponseWriter, r *http.Request) {
+	sidebarItems, err := loadSidebarData()
+	if err != nil {
+		log.Println("Failed to get recently commented articles", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	err = tpl_post.Execute(w, map[string]interface{}{
+		"sidebaritems": sidebarItems,
+	})
+	if err != nil {
+		log.Println("Failed to execute template for post", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+}
 
 func PostPost(w http.ResponseWriter, r *http.Request) {}
 
@@ -102,14 +118,21 @@ func init() {
 	db.SetConnMaxLifetime(5 * time.Minute)
 	log.Printf("Succeeded to connect db.")
 
+	funcMap := template.FuncMap{
+		"formatDate": FormatDate,
+	}
+
 	tpl_index_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
 	if err != nil {
 		log.Fatal("Failed to parse index.jade", err)
 	}
-	funcMap := template.FuncMap{
-		"formatDate": FormatDate,
-	}
 	tpl_index = template.Must(template.New("index").Funcs(funcMap).Parse(tpl_index_str))
+
+	tpl_post_str, err := jade.ParseFile(filepath.Join(VIEWS_DIR, "index.jade"))
+	if err != nil {
+		log.Fatal("Failed to parse post.jade", err)
+	}
+	tpl_post = template.Must(template.New("post").Funcs(funcMap).Parse(tpl_post_str))
 }
 
 func main() {
