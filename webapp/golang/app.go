@@ -16,7 +16,7 @@ import (
 const (
 	RECENT_COMMENTED_ARTICLES = "SELECT a.id, a.title FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10"
 	RECENT_ARTICLES = "SELECT id,title,body,created_at FROM article ORDER BY id DESC LIMIT 10"
-	VIEWS_DIR = ""
+	VIEWS_DIR = "/root/isucon/webapp/golang/views"
 )
 
 var (
