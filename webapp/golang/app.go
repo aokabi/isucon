@@ -16,7 +16,7 @@ import (
 const (
 	RECENT_COMMENTED_ARTICLES = "SELECT a.id, a.title FROM comment c LEFT JOIN article a ON c.article = a.id GROUP BY a.id ORDER BY MAX(c.created_at) DESC LIMIT 10"
 	RECENT_ARTICLES = "SELECT id,title,body,created_at FROM article ORDER BY id DESC LIMIT 10"
-	VIEWS_DIR = ""
+	VIEWS_DIR = "/root/isucon/webapp/golang/views"
 )
 
 var (
@@ -84,7 +84,7 @@ func init() {
 	db_password := ""
 	db_host := "127.0.0.1"
 	db_port := "3306"
-	dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
+	dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isucon?parseTime=true&loc=Local&charset=utf8mb4",
 		db_user, db_password, db_host, db_port)
 
 	log.Printf("Connecting to db: %q", dsn)
